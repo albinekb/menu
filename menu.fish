@@ -25,6 +25,12 @@ function menu -S
         set -l before ""
 
         for i in (seq $item_count)
+            set -l index_shortcut ""
+
+            if test $show_index = true
+              set index_shortcut ""(set_color --dim brblack)"[$i] "(set_color normal)""
+            end
+
             if test "$multiple" = true
                 if contains -- "$i" $menu_selected_index
                     set before "$checked_glyph "
@@ -37,7 +43,7 @@ function menu -S
                 set -l glyph "$cursor_glyph"
                 set -l item "$hover_item_style$argv[$i]$normal"
 
-                __menu_move_print $i 1 "$glyph $before$item"
+                __menu_move_print $i 1 "$glyph $index_shortcut$before$item"
             else
                 set -l item "$argv[$i]"
 
@@ -45,7 +51,7 @@ function menu -S
                     set item "$selected_item_style$argv[$i]$normal"
                 end
 
-                __menu_move_print $i 1 "  $before$item"
+                __menu_move_print $i 1 "  $index_shortcut$before$item"
             end
         end
     end
@@ -57,6 +63,8 @@ function menu -S
 
     set -l hover_item_style
     set -l selected_item_style
+    set -l index_navigation true
+    set -l show_index false
 
     set -l multiple "$menu_multiple_choice"
     set -l normal
@@ -67,6 +75,14 @@ function menu -S
 
     if test ! -z "$menu_cursor_glyph"
         set cursor_glyph "$menu_cursor_glyph"
+    end
+
+    if test ! -z "$menu_index_navigation"
+      set index_navigation $menu_index_navigation
+    end
+
+    if test ! -z "$menu_show_index"
+      set show_index $menu_show_index
     end
 
     if test ! -z "$menu_hover_item_style"
@@ -96,6 +112,7 @@ function menu -S
     set menu_selected_index
 
     set -l item_count (count $argv)
+    set -l row_number_regex '['(seq $item_count | string join '')']'
 
     tput civis
     stty -icanon -echo
@@ -104,10 +121,22 @@ function menu -S
 
     __menu_draw_items "$row_index" $argv
 
+    function  __menu_end_session
+      if test -z "$menu_selected_index"
+          set menu_selected_index "$row_index"
+      end
+
+      __menu_fullscreen --leave
+    end
+
     while true
         dd bs=1 count=1 ^ /dev/null | read -p "" -l c
-
+      
         switch "$c"
+            case "q"
+              __menu_fullscreen --leave
+              break
+
             case " "
                 if test "$multiple" = true
                     if contains $row_index $menu_selected_index
@@ -118,12 +147,7 @@ function menu -S
                 end
 
             case ""
-                if test -z "$menu_selected_index"
-                    set menu_selected_index "$row_index"
-                end
-
-                __menu_fullscreen --leave
-
+                __menu_end_session
                 break
 
             case "["
@@ -146,7 +170,11 @@ function menu -S
                 end
         end
 
-        command clear
+        if test $index_navigation = true
+          if string match -r $row_number_regex "$c" -q
+            set row_index "$c"
+          end
+        end
 
         __menu_draw_items $row_index $argv
     end

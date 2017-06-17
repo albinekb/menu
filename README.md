@@ -35,6 +35,18 @@ Set hover item style.
 
 Default: None.
 
+### `menu_index_navigation`
+
+Enable jumping to item by index.
+
+Default: `true`.
+
+### `menu_show_index`
+
+Show item index.
+
+Default: `false`.
+
 ### `menu_multiple_choice`
 
 Enable multiple choice mode.
