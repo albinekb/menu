@@ -1,4 +1,4 @@
-function menu -S 
+function menu -S
     if test -z "$argv"
         return 1
     end
@@ -45,12 +45,13 @@ function menu -S
                     set item "$selected_item_style$argv[$i]$normal"
                 end
 
-                __menu_move_print $i 1 "  $before$item"
+                __menu_move_print $i 1 "$cursor_glyph_empty $before$item"
             end
         end
     end
 
     set -l cursor_glyph ">"
+    set -l cursor_glyph_empty " "
 
     set -l checked_glyph "[x]"
     set -l unchecked_glyph "[ ]"
@@ -67,6 +68,7 @@ function menu -S
 
     if test ! -z "$menu_cursor_glyph"
         set cursor_glyph "$menu_cursor_glyph"
+        set cursor_glyph_empty (string repeat " " -n (string length "$menu_cursor_glyph"))
     end
 
     if test ! -z "$menu_hover_item_style"
